@@ -1,0 +1,56 @@
+Phase 2: Device Tree Configuration (board.dts)
+Lock the controllers to Peripheral-only mode. Since you are using a Type-A port wired as a Device, the board must not drive VBUS (the Host PC provides it), and OTG switching must be disabled.
+
+1. Configure USB 2.0 (usbc0)
+Force Device-only mode and remove OTG/Type-C logic (HUSB311 linking).
+
+dts
+
+&usbc0 {
+    device_type = "usbc0";
+    compatible = "allwinner,sunxi-otg-manager";
+    reg = <0x00 0x10 0x00 0x1000>;
+    
+    usb_port_type = <0x00>; /* 0x00 = Device Only */
+    usb_detect_type = <0x00>; /* No ID/VBUS detection logic */
+    usb_detect_mode = <0x00>;
+    
+    usb_id_gpio;
+    usb_det_vbus_gpio;
+    usb_regulator_io = "nocare";
+    usb_wakeup_suspend = <0x00>;
+    status = "okay";
+    
+    /delete-property/ usb-role-switch; /* Remove OTG switching */
+    /delete-property/ detvbus_io-supply;
+    /delete-property/ port;           /* Remove HUSB311 endpoint linking */
+};
+
+&udc {
+    status = "okay";
+};
+2. Configure USB 3.0 (usbc2 / xhci2)
+Change dr_mode to "peripheral" and remove drvvbus-supply.
+
+dts
+
+&usbc2 {
+    device_type = "usbc2";
+    compatible = "allwinner,sunxi-plat-dwc3";
+    /* ... keep existing reg, ranges, quirks ... */
+    status = "okay";
+    
+    /delete-property/ drvvbus-supply; /* Board must NOT drive VBUS in Device mode */
+
+    xhci2-controller@6a00000 {
+        compatible = "snps,dwc3";
+        /* ... keep existing reg, interrupts, clocks, phys ... */
+        
+        dr_mode = "peripheral"; /* <--- CRITICAL: Change from "host" to "peripheral" */
+        maximum-speed = "super-speed"; 
+        
+        /* ... keep existing quirks ... */
+        status = "okay";
+    };
+};
+

@@ -1,0 +1,42 @@
+; Sample INF to bind a USB device to WinUSB
+; Replace %VID% and %PID% with your device's vendor and product IDs (lowercase hex without 0x)
+
+[Version]
+Signature="$Windows NT$"
+Class=USB
+ClassGuid={36FC9E60-C465-11CF-8056-444553540000}
+Provider=%ProviderName%
+DriverVer=07/01/2020,10.0.18362.1
+
+[Manufacturer]
+%ProviderName% = USB_Devices
+
+[USB_Devices]
+%DeviceDesc% = WinUSB_Install, USB\VID_%VID%&PID_%PID%
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames]
+1 = %DiskName%,,,
+
+[WinUSB_Install]
+CopyFiles = @dummy.sys
+
+[WinUSB_Install.Services]
+AddService = WinUSB_Service, 0x00000002, WinUSB_Service_Inst
+
+[WinUSB_Service_Inst]
+DisplayName    = %WINUSB_DISPLAY%
+ServiceType    = 1
+StartType      = 3
+ErrorControl   = 1
+ServiceBinary  = %12%\winusb.sys
+
+[Strings]
+ProviderName = "Example Provider"
+DeviceDesc = "My USB Device"
+DiskName = "USB Install Disk"
+WINUSB_DISPLAY = "WinUSB"
+
+; Usage: replace %VID% and %PID% with e.g. 1d6b and 0105
